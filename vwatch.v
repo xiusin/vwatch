@@ -218,10 +218,9 @@ fn main() {
 		}
 		if !watcher.started {
 			watcher.started = true
-			watcher.build_run()
 		} else {
 			_ = <-watcher.event
-			watcher.build_run()
 		}
+		watcher.build_run()
 	}
 }
