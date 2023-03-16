@@ -19,5 +19,7 @@ ignores_pattern = ""
 # Whether to pull updates from Git repository
 git_pull = false
 
+git_pull_tick_time = 5
+
 # Whether to print startup information
 print_startup_info = true

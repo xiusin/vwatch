@@ -23,6 +23,7 @@ pub mut:
 	build_bin_name     string
 	watch_dir          string
 	git_pull           bool
+	git_pull_tick_time time.Duration
 	print_startup_info bool
 }
 
@@ -43,6 +44,11 @@ fn (mut cfg WatchCfg) check() {
 	if cfg.max_file_cnt == 0 {
 		cfg.max_file_cnt = 300
 	}
+
+	if cfg.git_pull_tick_time == 0 {
+		cfg.git_pull_tick_time = 5
+	}
+
 	if cfg.build_bin_name.len == 0 {
 		cfg.build_bin_name = os.base(os.abs_path('.'))
 	}
@@ -72,7 +78,7 @@ pub mut:
 }
 
 fn (mut w Watch) register_exit_signal() {
-	println(w.log_prefix + '💻 Start watching... ')
+	println(w.log_prefix + 'hing... ')
 	os.signal_opt(os.Signal.int, fn [mut w] (_ os.Signal) {
 		w.exited = true
 		if w.process_running {
@@ -85,12 +91,17 @@ fn (mut w Watch) register_exit_signal() {
 }
 
 fn (mut w Watch) git_pull() {
+	git_exec_path := os.find_abs_path_of_executable('git') or {
+		println(w.warning_prefix + ' Command `git` not found.')
+		return
+	}
+
 	for {
-		result := os.execute('git pull --no-edit')
+		result := os.execute('${git_exec_path} pull --no-edit')
 		if result.exit_code != 0 {
-			println(w.warning_prefix + ' ' + result.output)
+			println(w.warning_prefix + ' git pull: ' + result.output)
 		}
-		time.sleep(time.second * 10)
+		time.sleep(time.second * w.cfg.git_pull_tick_time)
 	}
 }
 
@@ -197,7 +208,6 @@ fn main() {
 	toml_doc := to.json(toml.parse_file('vwatch.toml') or { toml.Doc{} })
 	mut cfg := json.decode(WatchCfg, toml_doc) or { panic(err) }
 	cfg.check()
-
 	mut watcher := &Watch{
 		signal: chan os.Signal{}
 		root_path: cfg.watch_dir
