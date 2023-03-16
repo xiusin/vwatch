@@ -196,16 +196,16 @@ fn (mut w Watch) build_run() {
 fn main() {
 	toml_doc := to.json(toml.parse_file('vwatch.toml') or { toml.Doc{} })
 	mut cfg := json.decode(WatchCfg, toml_doc) or { panic(err) }
-	println(cfg)
 	cfg.check()
+
 	mut watcher := &Watch{
 		signal: chan os.Signal{}
 		root_path: cfg.watch_dir
 		build_bin_name: cfg.build_bin_name
 		event: chan string{}
 		cfg: cfg
+		max_count: u64(cfg.max_file_cnt)
 	}
-
 	watcher.register_exit_signal()
 	watcher.scan_and_register_file(watcher.root_path)
 	spawn watcher.listen_event()
