@@ -49,6 +49,20 @@ git_pull = false
 print_startup_info = true
 ```
 
+# Demo
+
+```
+$ v run vwatch.v                                                                                                                                                                ✹
+[INFO] start watching... 
+[INFO] Register /Users/xiusin/projects/src/github.com/xiusin/vwatch/vwatch.v
+[INFO] Register /Users/xiusin/projects/src/github.com/xiusin/vwatch/main.go
+[INFO] Content is updated and rebuilt...
+[INFO] build use time: 218.577ms
+^C[INFO] exit sub process closed.
+double string.free() detected
+[INFO]👋🏻 ByeBye...
+```
+
 # License
 This project is licensed under the MIT License - see the LICENSE file for details.
 
