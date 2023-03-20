@@ -1,4 +1,4 @@
-module main
+module vwatch
 
 import os
 import time
@@ -21,6 +21,7 @@ pub mut:
 	build_on_change    []string
 	ignores_pattern    string
 	build_bin_name     string
+	exec_template      string
 	watch_dir          string
 	git_pull           bool
 	git_pull_tick_time time.Duration
@@ -78,7 +79,7 @@ pub mut:
 }
 
 fn (mut w Watch) register_exit_signal() {
-	println(w.log_prefix + 'hing... ')
+	println(w.log_prefix + 'g... ')
 	os.signal_opt(os.Signal.int, fn [mut w] (_ os.Signal) {
 		w.exited = true
 		if w.process_running {
@@ -204,7 +205,7 @@ fn (mut w Watch) build_run() {
 	w.building = false
 }
 
-fn main() {
+pub fn watch_run() {
 	toml_doc := to.json(toml.parse_file('vwatch.toml') or { toml.Doc{} })
 	mut cfg := json.decode(WatchCfg, toml_doc) or { panic(err) }
 	cfg.check()
