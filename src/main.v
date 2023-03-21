@@ -4,15 +4,11 @@ import os
 import cli
 import serkonda7.termtable as tt
 import v.util.version
-import vweb
 import term
 import vwatch
 
 const vwatch_version = 'v0.1.0-alpha'
 
-struct App {
-	vweb.Context
-}
 
 fn main() {
 	cfg := $embed_file('vwatch.toml', .zlib)
@@ -45,18 +41,14 @@ fn main() {
 				]
 				description: 'Run the application by starting a local development server.'
 				execute: fn (_ cli.Command) ! {
-					vwatch.watch_run()
+					vwatch.watch_run() !
 				}
 			},
 			cli.Command{
 				name: 'server'
 				description: 'Serving static content over HTTP on port.'
 				execute: fn (_ cli.Command) ! {
-					mut app := &App{}
-					static_dir := os.getwd()
-					os.chdir(static_dir)!
-					app.handle_static(static_dir, true)
-					vweb.run(app, 8081)
+					vwatch.server()!
 				}
 			},
 			cli.Command{

@@ -29,7 +29,7 @@ pub mut:
 }
 
 fn (mut w Watch) register_exit_signal() {
-	println(w.log_prefix + 'g... ')
+	println(w.log_prefix + ' waiting exit... ')
 	os.signal_opt(os.Signal.int, fn [mut w] (_ os.Signal) {
 		w.exited = true
 		if w.process_running {
@@ -132,12 +132,14 @@ fn (mut w Watch) build_run() {
 			w.signal <- os.Signal.kill
 		}
 		time.sleep(time.second)
-		mut process := os.new_process('./' + w.build_bin_name)
+
+		mut process := os.new_process('./${w.build_bin_name}')
+		process.args = os.args[2..]
 		spawn fn [mut w, mut process] () {
 			select {
 				_ := <-w.signal {
 					process.signal_kill()
-					unsafe { process.free() }
+					process.close()
 					println(w.log_prefix + ' exit sub process ${process.status}.')
 					w.process_running = false
 				}
@@ -146,7 +148,7 @@ fn (mut w Watch) build_run() {
 		w.process_running = true
 		spawn fn [mut process, mut w] () {
 			process.wait()
-			unsafe { process.free() }
+			process.close()
 			w.process_running = false
 		}()
 	} else {
@@ -155,9 +157,11 @@ fn (mut w Watch) build_run() {
 	w.building = false
 }
 
-pub fn watch_run() {
+pub fn watch_run() ! {
 	toml_doc := to.json(toml.parse_file('vwatch.toml') or { toml.Doc{} })
-	mut cfg := json.decode(WatchCfg, toml_doc) or { panic(err) }
+	mut cfg := json.decode(WatchCfg, toml_doc) or {
+		return err
+	}
 	cfg.check()
 	mut watcher := &Watch{
 		signal: chan os.Signal{}
