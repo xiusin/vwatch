@@ -8,7 +8,7 @@ import vweb
 import term
 import vwatch
 
-const vwatch_version = "v0.1.0-alpha"
+const vwatch_version = 'v0.1.0-alpha'
 
 struct App {
 	vweb.Context
@@ -29,14 +29,14 @@ fn main() {
 				name: 'init'
 				description: 'Generate configuration file.'
 				execute: fn [cfg] (cmd cli.Command) ! {
-					os.write_file("vwatch.toml", cfg.to_string())!
+					os.write_file('vwatch.toml', cfg.to_string())!
 					println('${term.green('vwatch.toml')} has generated.')
 				}
 			},
 			cli.Command{
 				name: 'run'
 				flags: [
-						cli.Flag{
+					cli.Flag{
 						flag: .string
 						name: 'c'
 						description: 'set config file path.'
@@ -48,24 +48,25 @@ fn main() {
 					vwatch.watch_run()
 				}
 			},
-				cli.Command{
+			cli.Command{
 				name: 'server'
 				description: 'Serving static content over HTTP on port.'
 				execute: fn (_ cli.Command) ! {
 					mut app := &App{}
-					os.chdir(os.dir(os.executable()))!
-					app.handle_static("./", true)
+					static_dir := os.getwd()
+					os.chdir(static_dir)!
+					app.handle_static(static_dir, true)
 					vweb.run(app, 8081)
 				}
 			},
-				cli.Command{
+			cli.Command{
 				name: 'version'
 				description: 'Print the vwatch version.'
 				execute: fn (_ cli.Command) ! {
 					data := [
 						['Name', 'Version', 'Description'],
 						['V', version.v_version + '-' + version.vhash(), 'The V language version'],
-						['VWatch',vwatch_version, 'The vwatch version'],
+						['VWatch', vwatch_version, 'The vwatch version'],
 						['Os', os.user_os(), 'Name of the operating system (OS)'],
 					]
 					t := tt.Table{
