@@ -9,7 +9,6 @@ import vwatch
 
 const vwatch_version = 'v0.1.0-alpha'
 
-
 fn main() {
 	cfg := $embed_file('vwatch.toml', .zlib)
 
@@ -41,14 +40,22 @@ fn main() {
 				]
 				description: 'Run the application by starting a local development server.'
 				execute: fn (_ cli.Command) ! {
-					vwatch.watch_run() !
+					vwatch.watch_run()!
 				}
 			},
 			cli.Command{
 				name: 'server'
+				flags: [
+					cli.Flag{
+						flag: .int
+						name: 'p'
+						description: 'set server port.'
+					},
+				]
 				description: 'Serving static content over HTTP on port.'
-				execute: fn (_ cli.Command) ! {
-					vwatch.server()!
+				execute: fn (cmd cli.Command) ! {
+					port := cmd.flags.get_int('p')!
+					vwatch.server(if port > 0 { port } else { 8080 })!
 				}
 			},
 			cli.Command{
