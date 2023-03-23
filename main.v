@@ -4,14 +4,12 @@ import os
 import cli
 import serkonda7.termtable as tt
 import v.util.version
-import term
 import vwatch
 
 const vwatch_version = 'v0.1.0-alpha'
 
 fn main() {
 	cfg := $embed_file('vwatch.toml', .zlib)
-
 	mut app := cli.Command{
 		name: 'vwatch'
 		description: 'A hot-reloading tool developed with V Language.'
@@ -26,6 +24,14 @@ fn main() {
 				execute: fn [cfg] (cmd cli.Command) ! {
 					os.write_file('vwatch.toml', cfg.to_string())!
 					println('${term.green('vwatch.toml')} has generated.')
+				}
+			},
+			cli.Command{
+				name: 'update'
+				description: 'Update vwatch.'
+				execute: fn(cmd cli.Command) ! {
+					git_remote_path := 'https://github.com/xiusin/vwatch/releases/tag/'
+					println('${git_remote_path}')
 				}
 			},
 			cli.Command{

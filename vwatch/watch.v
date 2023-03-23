@@ -7,6 +7,7 @@ import sync
 import toml
 import toml.to
 import json
+import xiusin.vcolor
 
 struct Watch {
 	sync.Mutex
@@ -17,8 +18,8 @@ pub mut:
 	signal          chan os.Signal
 	build_bin_name  string
 	exited          bool
-	log_prefix      string      = term.bg_green('[INFO]')
-	warning_prefix  string      = term.bg_red('[ERRO]')
+	log_prefix      string      = vcolor.green_string('[INFO] ')
+	warning_prefix  string      = vcolor.red_string('[ERRO] ')
 	process         &os.Process = unsafe { nil }
 	files           map[string]&WatchFile
 	root_path       string
@@ -29,7 +30,7 @@ pub mut:
 }
 
 fn (mut w Watch) register_exit_signal() {
-	println(w.log_prefix + ' waiting exit... ')
+	println(w.log_prefix + 'waiting exit...')
 	os.signal_opt(os.Signal.int, fn [mut w] (_ os.Signal) {
 		w.exited = true
 		if w.process_running {
@@ -43,14 +44,14 @@ fn (mut w Watch) register_exit_signal() {
 
 fn (mut w Watch) git_pull() {
 	git_exec_path := os.find_abs_path_of_executable('git') or {
-		println(w.warning_prefix + ' Command `git` not found.')
+		vcolor.yellow('[WARN] Command `git` not found.')
 		return
 	}
 
 	for {
 		result := os.execute('${git_exec_path} pull --no-edit')
 		if result.exit_code != 0 {
-			println(w.warning_prefix + ' git pull: ' + result.output)
+			vcolor.red('[ERRO] git pull: ' + result.output)
 		}
 		time.sleep(time.second * w.cfg.git_pull_tick_time)
 	}
@@ -71,12 +72,12 @@ fn (mut w Watch) listen_event() {
 		mut send_event_time := i64(0)
 		for _, mut file in w.files {
 			if !os.is_file(file.file_path) {
-				println(w.log_prefix + ' file ${file.file_path} ${term.red('deleted')}.')
+				println( w.log_prefix + ' file ${file.file_path} ${vcolor.red_string('deleted')}.')
 				w.files.delete(file.file_path)
 			} else {
 				mtime := os.file_last_mod_unix(file.file_path)
 				if mtime > file.mtime {
-					println(w.log_prefix + ' file ${file.file_path} ${term.yellow('modified')}.')
+					println( w.log_prefix + ' file ${file.file_path} ${vcolor.yellow_string('modified')}.')
 					file.mtime = mtime
 				} else {
 					continue
@@ -110,7 +111,7 @@ fn (mut w Watch) scan_and_register_file(file_path string) {
 		} else if w.cfg.watch_extensions.contains(os.file_ext(file)) && full_path !in w.files {
 			w.max_count--
 			if w.cfg.print_startup_info {
-				println(w.log_prefix + ' Register ${full_path}')
+				println( w.log_prefix  + 'Register ' + vcolor.cyan_string(full_path))
 			}
 			w.files[full_path] = &WatchFile{
 				file_path: full_path
@@ -122,11 +123,11 @@ fn (mut w Watch) scan_and_register_file(file_path string) {
 
 fn (mut w Watch) build_run() {
 	w.building = true
-	println(w.log_prefix + ' Content is updated and rebuilt...')
+	println( w.log_prefix + 'Content is updated and rebuilt...')
 	w.sw.restart()
 	result := os.execute(w.cfg.build_on_change.join(' ') + ' ' + w.build_bin_name)
 	w.sw.stop()
-	println(w.log_prefix + ' build use time: ${w.sw.elapsed()}')
+	println(w.log_prefix  + 'build use time: ${w.sw.elapsed()}')
 	if result.exit_code == 0 {
 		if w.process_running {
 			w.signal <- os.Signal.kill
@@ -140,7 +141,7 @@ fn (mut w Watch) build_run() {
 				_ := <-w.signal {
 					process.signal_kill()
 					process.close()
-					println(w.log_prefix + ' exit sub process ${process.status}.')
+					println(w.log_prefix  + 'exit sub process ${process.status}.')
 					w.process_running = false
 				}
 			}
@@ -152,7 +153,7 @@ fn (mut w Watch) build_run() {
 			w.process_running = false
 		}()
 	} else {
-		println(w.warning_prefix + ' Build error reason: ${result.output}')
+		println(w.warning_prefix + 'Build error reason: ${result.output}')
 	}
 	w.building = false
 }
