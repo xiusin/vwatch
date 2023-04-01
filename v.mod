@@ -3,5 +3,8 @@ Module {
 	description: ''
 	version: ''
 	license: ''
-	dependencies: []
+	dependencies: [
+	    'serkonda7.termtable',
+	    'xiusin.vcolor'
+	]
 }

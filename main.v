@@ -5,6 +5,7 @@ import cli
 import serkonda7.termtable as tt
 import v.util.version
 import vwatch
+import xiusin.vcolor
 
 const vwatch_version = 'v0.1.0-alpha'
 
@@ -23,13 +24,13 @@ fn main() {
 				description: 'Generate configuration file.'
 				execute: fn [cfg] (cmd cli.Command) ! {
 					os.write_file('vwatch.toml', cfg.to_string())!
-					println('${term.green('vwatch.toml')} has generated.')
+					println('${vcolor.green_string('vwatch.toml')} has generated.')
 				}
 			},
 			cli.Command{
 				name: 'update'
 				description: 'Update vwatch.'
-				execute: fn(cmd cli.Command) ! {
+				execute: fn (cmd cli.Command) ! {
 					git_remote_path := 'https://github.com/xiusin/vwatch/releases/tag/'
 					println('${git_remote_path}')
 				}
@@ -54,14 +55,23 @@ fn main() {
 				flags: [
 					cli.Flag{
 						flag: .int
-						name: 'p'
+						name: 'port'
 						description: 'set server port.'
+					},
+					cli.Flag{
+						flag: .string
+						name: 'domain'
+						description: 'proxy domain.'
 					},
 				]
 				description: 'Serving static content over HTTP on port.'
 				execute: fn (cmd cli.Command) ! {
-					port := cmd.flags.get_int('p')!
-					vwatch.server(if port > 0 { port } else { 8080 })!
+					port := cmd.flags.get_int('port')!
+					proxy_domain := cmd.flags.get_string('domain')!
+					if proxy_domain.len > 0 && !proxy_domain.starts_with('http') {
+						panic(error('domain has starts with `http`'))
+					}
+					vwatch.server(if port > 0 { port } else { 8080 }, proxy_domain)!
 				}
 			},
 			cli.Command{
