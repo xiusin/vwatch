@@ -7,8 +7,6 @@ import v.util.version
 import vwatch
 import xiusin.vcolor
 
-const vwatch_version = 'v0.1.0-alpha'
-
 fn main() {
 	cfg := $embed_file('vwatch.toml', .zlib)
 	mut app := cli.Command{
@@ -31,8 +29,7 @@ fn main() {
 				name: 'update'
 				description: 'Update vwatch.'
 				execute: fn (cmd cli.Command) ! {
-					git_remote_path := 'https://github.com/xiusin/vwatch/releases/tag/'
-					println('${git_remote_path}')
+					vwatch.update_vwatch()!
 				}
 			},
 			cli.Command{
@@ -81,7 +78,7 @@ fn main() {
 					data := [
 						['Name', 'Version', 'Description'],
 						['V', version.v_version + '-' + version.vhash(), 'The V language version'],
-						['VWatch', vwatch_version, 'The vwatch version'],
+						['VWatch', vwatch.vwatch_version, 'The vwatch version'],
 						['Os', os.user_os(), 'Name of the operating system (OS)'],
 					]
 					t := tt.Table{
