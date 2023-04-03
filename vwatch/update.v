@@ -23,6 +23,7 @@ struct Asset {
 }
 
 pub fn update_vwatch() ! {
+	ext := if os.user_os() == 'windows' { '.exe' } else { '' }
 	mut req := http.new_request(.get, vwatch.releases_url, '')
 	req.read_timeout = 10 * time.second
 	mut resp := req.do()!
@@ -32,12 +33,8 @@ pub fn update_vwatch() ! {
 		return
 	}
 
-	// 确定文件名
-	mut base_name := 'vwatch-${os.user_os()}'
-	if os.user_os() == 'windows' {
-		base_name += '.exe'
-	}
-
+	// ensure vwatch file
+	mut base_name := 'vwatch-${os.user_os()}${ext}'
 	mut file_url := ''
 	for asset in data.assets {
 		if asset.name == base_name {
@@ -49,8 +46,7 @@ pub fn update_vwatch() ! {
 		vcolor.red('No `${base_name}` found')
 		return
 	}
-	dir := os.dir(os.executable())
-	bin_file := os.join_path(dir, base_name)
+	bin_file := os.join_path(os.dir(os.executable()), base_name)
 	http.download_file(file_url, bin_file)!
 	os.mv(bin_file, os.executable())!
 	vcolor.green('success updated, now version is ${data.tag_name}')
