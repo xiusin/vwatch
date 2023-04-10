@@ -111,7 +111,7 @@ fn (mut w Watch) scan_and_register_file(file_path string) {
 		} else if w.cfg.watch_extensions.contains(os.file_ext(file)) && full_path !in w.files {
 			w.max_count--
 			if w.cfg.print_startup_info {
-				println(w.log_prefix + 'Register ' + vcolor.cyan_string(full_path))
+				println(w.log_prefix + 'file ' + full_path + ' ${vcolor.cyan_string('add')}.')
 			}
 			w.files[full_path] = &WatchFile{
 				file_path: full_path
