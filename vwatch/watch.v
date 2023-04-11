@@ -7,6 +7,7 @@ import toml
 import toml.to
 import json
 import xiusin.vcolor
+import regex
 
 struct Watch {
 	sync.Mutex
@@ -71,13 +72,13 @@ fn (mut w Watch) listen_event() {
 		mut send_event_time := i64(0)
 		for _, mut file in w.files {
 			if !os.is_file(file.file_path) {
-				println(w.log_prefix + ' file ${file.file_path} ${vcolor.red_string('deleted')}.')
+				println(w.log_prefix + ' file ${file.file_path.replace_once(w.root_path, "")} ${vcolor.red_string('deleted')}.')
 				w.files.delete(file.file_path)
 			} else {
 				mtime := os.file_last_mod_unix(file.file_path)
 				if mtime > file.mtime {
 					println(w.log_prefix +
-						' file ${file.file_path} ${vcolor.yellow_string('modified')}.')
+						' file ${file.file_path.replace_once(w.root_path, "")} ${vcolor.yellow_string('modified')}.')
 					file.mtime = mtime
 				} else {
 					continue
@@ -89,7 +90,7 @@ fn (mut w Watch) listen_event() {
 				send_event_time = time.now().unix
 				break
 			}
-			time.sleep(time.microsecond * 30)
+			time.sleep(time.microsecond * 50)
 		}
 		w.unlock()
 		time.sleep(time.second)
@@ -98,6 +99,12 @@ fn (mut w Watch) listen_event() {
 
 fn (mut w Watch) scan_and_register_file(file_path string) {
 	files := os.ls(file_path) or { panic(err) }
+
+	mut re := regex.new()
+	if w.cfg.ignores_pattern.len > 0 {
+		re = regex.regex_opt('${w.cfg.ignores_pattern}') or { panic(err) }
+	}
+
 	for _, file in files {
 		if w.max_count == 0 {
 			return
@@ -109,9 +116,12 @@ fn (mut w Watch) scan_and_register_file(file_path string) {
 		if os.is_dir(full_path) {
 			w.scan_and_register_file(full_path)
 		} else if w.cfg.watch_extensions.contains(os.file_ext(file)) && full_path !in w.files {
+			if w.cfg.ignores_pattern.len > 0 && re.find_all_str(full_path).len > 0 {
+				continue
+			}
 			w.max_count--
 			if w.cfg.print_startup_info {
-				println(w.log_prefix + 'file ' + full_path + ' ${vcolor.cyan_string('add')}.')
+				println(w.log_prefix + 'file ' + full_path.replace_once(w.root_path, "") + ' ${vcolor.cyan_string('added')}.')
 			}
 			w.files[full_path] = &WatchFile{
 				file_path: full_path
