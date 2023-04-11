@@ -5,6 +5,11 @@ import os
 import net.http
 import net.urllib
 
+// Allows local static file hosting, starts listening service on the specified port,
+// allows direct proxy interface requests, needs to set proxy domain name
+// eg: vwatch --port=8089 --domain=http://www.example.org
+
+// App a vweb service
 struct App {
 	vweb.Context
 pub mut:
