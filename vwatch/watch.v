@@ -31,7 +31,6 @@ pub mut:
 
 fn (mut w Watch) register_exit_signal() {
 	os.signal_opt(os.Signal.int, fn [mut w] (_ os.Signal) {
-		println(w.log_prefix + 'waiting exit...')
 		w.exited = true
 		if w.process_running {
 			w.signal <- os.Signal.kill
