@@ -23,7 +23,10 @@ fn (mut cfg WatchCfg) check() {
 		cfg.build_on_change[0] = os.find_abs_path_of_executable(cfg.build_on_change[0]) or {
 			panic(err)
 		}
+
 	}
+	cfg.build_on_change = cfg.build_on_change.map(it.replace("\${pwd}", os.abs_path('.')))
+
 	if cfg.watch_extensions.len == 0 {
 		cfg.watch_extensions = ['.go', '.v', '.toml', '.yaml']
 	}
